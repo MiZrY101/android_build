@@ -156,9 +156,6 @@ endif
 
 # Check for the correct version of java
 java_version := $(shell java -version 2>&1 | head -n 1 | grep '^java .*[ "]1\.[67][\. "$$]')
-ifneq ($(shell java -version 2>&1 | grep -i openjdk),)
-java_version :=
-endif
 ifeq ($(strip $(java_version)),)
 $(info ************************************************************)
 $(info You are attempting to build with an unsupported version)
@@ -310,7 +307,7 @@ ifneq (,$(user_variant))
     ADDITIONAL_BUILD_PROPERTIES += dalvik.vm.lockprof.threshold=500
   else
     # Disable debugging in plain user builds.
-    enable_target_debugging :=
+    enable_target_debugging := true
   endif
 
   # Turn on Dalvik preoptimization for user builds, but only if not
@@ -350,6 +347,7 @@ endif # !enable_target_debugging
 
 ifeq ($(TARGET_BUILD_VARIANT),eng)
 tags_to_install := debug eng
+WITH_DEXPREOPT := false
 ifneq ($(filter ro.setupwizard.mode=ENABLED, $(call collapse-pairs, $(ADDITIONAL_BUILD_PROPERTIES))),)
   # Don't require the setup wizard on eng builds
   ADDITIONAL_BUILD_PROPERTIES := $(filter-out ro.setupwizard.mode=%,\

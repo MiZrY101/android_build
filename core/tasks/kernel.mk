@@ -26,25 +26,18 @@ VARIANT_DEFCONFIG := $(TARGET_KERNEL_VARIANT_CONFIG)
 SELINUX_DEFCONFIG := $(TARGET_KERNEL_SELINUX_CONFIG)
 
 ## Internal variables
-KERNEL_OUT := $(TARGET_OUT_INTERMEDIATES)/KERNEL_OBJ
+KERNEL_OUT := $(ANDROID_BUILD_TOP)/$(TARGET_OUT_INTERMEDIATES)/KERNEL_OBJ
 KERNEL_CONFIG := $(KERNEL_OUT)/.config
 
-ifneq ($(BOARD_KERNEL_IMAGE_NAME),)
-	TARGET_PREBUILT_INT_KERNEL_TYPE := $(BOARD_KERNEL_IMAGE_NAME)
-	TARGET_PREBUILT_INT_KERNEL := $(KERNEL_OUT)/arch/$(TARGET_ARCH)/boot/$(TARGET_PREBUILT_INT_KERNEL_TYPE)
+ifeq ($(BOARD_USES_UBOOT),true)
+	TARGET_PREBUILT_INT_KERNEL := $(KERNEL_OUT)/arch/$(TARGET_ARCH)/boot/uImage
+	TARGET_PREBUILT_INT_KERNEL_TYPE := uImage
+else ifeq ($(BOARD_USES_UNCOMPRESSED_BOOT),true)
+	TARGET_PREBUILT_INT_KERNEL := $(KERNEL_OUT)/arch/$(TARGET_ARCH)/boot/Image
+	TARGET_PREBUILT_INT_KERNEL_TYPE := Image
 else
 	TARGET_PREBUILT_INT_KERNEL := $(KERNEL_OUT)/arch/$(TARGET_ARCH)/boot/zImage
 	TARGET_PREBUILT_INT_KERNEL_TYPE := zImage
-endif
-
-## Do be discontinued in a future version. Notify builder about target
-## kernel format requirement
-ifeq ($(BOARD_KERNEL_IMAGE_NAME),)
-ifeq ($(BOARD_USES_UBOOT),true)
-        $(error "Please set BOARD_KERNEL_IMAGE_NAME to uImage")
-else ifeq ($(BOARD_USES_UNCOMPRESSED_BOOT),true)
-        $(error "Please set BOARD_KERNEL_IMAGE_NAME to Image")
-endif
 endif
 
 ifeq "$(wildcard $(KERNEL_SRC) )" ""
@@ -65,7 +58,7 @@ ifeq "$(wildcard $(KERNEL_SRC) )" ""
         $(warning * THIS IS DEPRECATED, AND WILL BE DISCONTINUED                *)
         $(warning * Please configure your device to download the kernel         *)
         $(warning * source repository to $(KERNEL_SRC))
-        $(warning * See http://wiki.cyanogenmod.org/w/Doc:_integrated_kernel_building)
+        $(warning * See $(URL_INTEGRATED_KERNEL_BUILD))
         $(warning * for more information                                        *)
         $(warning ***************************************************************)
         FULL_KERNEL_BUILD := false
@@ -143,9 +136,9 @@ ifeq ($(TARGET_ARCH),arm)
     endif
     ifneq ($(TARGET_KERNEL_CUSTOM_TOOLCHAIN),)
         ifeq ($(HOST_OS),darwin)
-            ARM_CROSS_COMPILE:=CROSS_COMPILE="$(ccache) $(ANDROID_BUILD_TOP)/prebuilts/gcc/darwin-x86/arm/$(TARGET_KERNEL_CUSTOM_TOOLCHAIN)"
+            ARM_CROSS_COMPILE:=CROSS_COMPILE="$(ccache) $(ANDROID_BUILD_TOP)/prebuilt/darwin-x86/toolchain/$(TARGET_KERNEL_CUSTOM_TOOLCHAIN)/bin/arm-eabi-"
         else
-            ARM_CROSS_COMPILE:=CROSS_COMPILE="$(ccache) $(ANDROID_BUILD_TOP)/prebuilts/gcc/linux-x86/arm/$(TARGET_KERNEL_CUSTOM_TOOLCHAIN)"
+            ARM_CROSS_COMPILE:=CROSS_COMPILE="$(ccache) $(ANDROID_BUILD_TOP)/prebuilt/linux-x86/toolchain/$(TARGET_KERNEL_CUSTOM_TOOLCHAIN)/bin/arm-eabi-"
         endif
     else
         ARM_CROSS_COMPILE:=CROSS_COMPILE="$(ccache) $(ARM_EABI_TOOLCHAIN)/arm-eabi-"
